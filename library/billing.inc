@@ -17,12 +17,26 @@ function getBillingByEncounter ($pid,$encounter, $cols = "code_type, code, code_
 {
     $res = sqlStatement("select $cols from billing where encounter = ? and pid=? and activity=1 order by code_type, date ASC", array($encounter,$pid) );
 
-    $all=array();
+    $iter=0;
     for($iter=0; $row=sqlFetchArray($res); $iter++)
     {
         $all[$iter] = $row;
     }
-    return $all;
+    // Create billing rows with diagnoses for issues associated 
+    // with the encounter if no diagnosis or billing codes exist yet.
+    if ($iter==0)
+    {
+        $res = sqlStatement("select SUBSTRING_INDEX(l.diagnosis, ':', 1) as code_type, SUBSTRING_INDEX(l.diagnosis, ':', -1) as code, c.code_text from issue_encounter ie join lists l on (l.pid = ie.pid and ie.list_id = l.id) join code_types ct on (ct.ct_key = SUBSTRING_INDEX(l.diagnosis, ':', 1)) join codes c on (c.code_type = ct.ct_id and c.code = SUBSTRING_INDEX(l.diagnosis, ':', -1)) where ie.encounter = ? and ie.pid = ? order by SUBSTRING_INDEX(l.diagnosis, ':', 1) ASC", array($encounter,$pid) );
+        for($iter=0; $row=sqlFetchArray($res); $iter++)
+        {
+            //$all[$iter] = $row;
+            addBilling($encounter, $row['code_type'], $row['code'], $row['code_text'], $pid);
+        }
+        if ($iter != 0)
+            return getBillingByEncounter($pid,$encounter,$cols);
+    }
+    else
+        return $all;
 }
 
 function addBilling($encounter_id, $code_type, $code, $code_text, $pid,
