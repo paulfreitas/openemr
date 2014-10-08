@@ -136,6 +136,7 @@ if ($_POST['form_save']) {
   $form_source = trim($_POST['form_source']);
   $patdata = getPatientData($form_pid, 'fname,mname,lname,pubpid');
   $NameNew=$patdata['fname'] . " " .$patdata['lname']. " " .$patdata['mname'];
+  $pmt_date = $_POST['pmt_date'];
 
 	if($_REQUEST['radio_type_of_payment']=='pre_payment')
 	 {
@@ -145,14 +146,14 @@ if ($_POST['form_save']) {
 			", user_id = ?"     . 
 			", closed = ?"      .
 			", reference = ?"   . 
-			", check_date =  now() , deposit_date = now() "	.
+			", check_date =  '?', deposit_date = '?' "	.
 			",  pay_total = ?"    . 
 			", payment_type = 'patient'" .
 			", description = ?"   .
 			", adjustment_code = 'pre_payment'" .
-			", post_to_date = now() " .
+			", post_to_date = '?' " .
 			", payment_method = ?",
-			array(0,$form_pid,$_SESSION['authUserID'],0,$form_source,$_REQUEST['form_prepayment'],$NameNew,$form_method));
+			array(0,$form_pid,$_SESSION['authUserID'],0,$form_source,$pmt_date,$pmt_date,$_REQUEST['form_prepayment'],$NameNew,$pmt_date,$form_method));
 	
 		 frontPayment($form_pid, 0, $form_method, $form_source, $_REQUEST['form_prepayment'], 0, $timestamp);//insertion to 'payments' table.
 	 }
@@ -194,8 +195,8 @@ if ($_POST['form_save']) {
 			 {
 				$session_id=idSqlStatement("INSERT INTO ar_session (payer_id,user_id,reference,check_date,deposit_date,pay_total,".
 				 " global_amount,payment_type,description,patient_id,payment_method,adjustment_code,post_to_date) ".
-				 " VALUES ('0',?,?,now(),now(),?,'','patient','COPAY',?,?,'patient_payment',now())",
-				 array($_SESSION['authId'],$form_source,$amount,$form_pid,$form_method));
+				 " VALUES ('0',?,?,'?','?',?,'','patient','COPAY',?,?,'patient_payment','?')",
+				 array($_SESSION['authId'],$form_source,$pmt_date,$pmt_date,$amount,$form_pid,$form_method,$pmt_date));
 				 
 				  $insrt_id=idSqlStatement("INSERT INTO ar_activity (pid,encounter,code_type,code,modifier,payer_type,post_time,post_user,session_id,pay_amount,account_code)".
 				   " VALUES (?,?,?,?,?,0,now(),?,?,?,'PCP')",
@@ -219,14 +220,14 @@ if ($_POST['form_save']) {
 					", user_id = ?"     .
 					", closed = ?"      .
 					", reference = ?"   .
-					", check_date =  now() , deposit_date = now() "	.
+					", check_date =  '?' , deposit_date = '?' "	.
 					",  pay_total = ?"    .
 					", payment_type = 'patient'" .
 					", description = ?"   .
 					", adjustment_code = ?" .
-					", post_to_date = now() " .
+					", post_to_date = '?' " .
 					", payment_method = ?",
-					array(0,$form_pid,$_SESSION['authUserID'],0,$form_source,$amount,$NameNew,$adjustment_code,$form_method));
+					array(0,$form_pid,$_SESSION['authUserID'],0,$form_source,$pmt_date,$pmt_date,$amount,$NameNew,$adjustment_code,$pmt_date,$form_method));
 
 	//--------------------------------------------------------------------------------------------------------------------
 
@@ -581,15 +582,8 @@ function coloring()
  }
 function CheckVisible(MakeBlank)
  {//Displays and hides the check number text box.
-   if(document.getElementById('form_method').options[document.getElementById('form_method').selectedIndex].value=='check_payment' ||
-   	  document.getElementById('form_method').options[document.getElementById('form_method').selectedIndex].value=='bank_draft'  )
-   {
+  //Keep field enabled for all payment types as kind of a notes field.
 	document.getElementById('check_number').disabled=false;
-   }
-   else
-   {
-	document.getElementById('check_number').disabled=true;
-   }
  }
 function validate()
  {
@@ -937,6 +931,21 @@ function make_insurance()
   <td class='text' colspan="2" ><input type="radio" name="radio_type_of_coverage" id="radio_type_of_coverage1" value="self" onClick="make_visible_radio();make_self();"/><?php echo htmlspecialchars(xl('Self'), ENT_QUOTES); ?><input type="radio" name="radio_type_of_coverage" id="radio_type_of_coverag2" value="insurance"  checked="checked" onClick="make_hide_radio();make_insurance();"/><?php echo htmlspecialchars(xl('Insurance'), ENT_QUOTES); ?>  </td>
  </tr>
 
+ <tr>
+  <td class='text' valign="middle" >
+   <?php echo xlt('Posting Date'); ?>:
+  </td>
+  <td>
+   <?php $pmt_date = date('Y-m-d'); ?>
+   <input type='text' size='10' name='pmt_date' id='pmt_date'
+    value='<?php echo attr($pmt_date) ?>'
+    title='yyyy-mm-dd date of service'
+    onkeyup='datekeyup(this,mypcc)' onblur='dateblur(this,mypcc)' />
+   <img src='../pic/show_calendar.gif' align='absbottom' width='24' height='22'
+    id='img_pmt_date' border='0' alt='[?]' style='cursor:pointer'
+    title='<?php echo xla("Click here to choose a date"); ?>'>
+  </td>
+ </tr>
  <tr height="5"><td colspan='3'></td></tr>
 
  <tr id="tr_radio1" style="display:none"><!-- For radio Insurance -->
@@ -1236,6 +1245,9 @@ function make_insurance()
 </form>
 <script language="JavaScript">
  calctotal();
+<?php if (! $GLOBALS['simplified_demographics']) { ?>
+ Calendar.setup({inputField:"pmt_date", ifFormat:"%Y-%m-%d", button:"img_pmt_date"});
+<?php } ?>
 </script>
 </center>
 </body>
