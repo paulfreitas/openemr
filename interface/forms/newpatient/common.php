@@ -352,7 +352,7 @@ while ($irow = sqlFetchArray($ires)) {
   $list_id = $irow['id'];
   $tcode = $irow['type'];
   if ($ISSUE_TYPES[$tcode]) $tcode = $ISSUE_TYPES[$tcode][2];
-  echo "    <option value='" . attr($list_id) . "'";
+  echo "    <option id='list$list_id' value='$list_id' onclick='if (/....-..-../.test(list$list_id.innerHTML))  form_onset_date.value=/....-..-../.exec(list$list_id.innerHTML);'";
   if ($viewmode) {
     $perow = sqlQuery("SELECT count(*) AS count FROM issue_encounter WHERE " .
       "pid = ? AND encounter = ? AND list_id = ?", array($pid,$encounter,$list_id));
