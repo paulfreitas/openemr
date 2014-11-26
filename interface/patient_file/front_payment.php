@@ -146,12 +146,12 @@ if ($_POST['form_save']) {
 			", user_id = ?"     . 
 			", closed = ?"      .
 			", reference = ?"   . 
-			", check_date =  '?', deposit_date = '?' "	.
+			", check_date =  ?, deposit_date = ? "	.
 			",  pay_total = ?"    . 
 			", payment_type = 'patient'" .
 			", description = ?"   .
 			", adjustment_code = 'pre_payment'" .
-			", post_to_date = '?' " .
+			", post_to_date = ? " .
 			", payment_method = ?",
 			array(0,$form_pid,$_SESSION['authUserID'],0,$form_source,$pmt_date,$pmt_date,$_REQUEST['form_prepayment'],$NameNew,$pmt_date,$form_method));
 	
@@ -195,7 +195,7 @@ if ($_POST['form_save']) {
 			 {
 				$session_id=idSqlStatement("INSERT INTO ar_session (payer_id,user_id,reference,check_date,deposit_date,pay_total,".
 				 " global_amount,payment_type,description,patient_id,payment_method,adjustment_code,post_to_date) ".
-				 " VALUES ('0',?,?,'?','?',?,'','patient','COPAY',?,?,'patient_payment','?')",
+				 " VALUES ('0',?,?,?,?,?,'','patient','COPAY',?,?,'patient_payment',?)",
 				 array($_SESSION['authId'],$form_source,$pmt_date,$pmt_date,$amount,$form_pid,$form_method,$pmt_date));
 				 
 				  $insrt_id=idSqlStatement("INSERT INTO ar_activity (pid,encounter,code_type,code,modifier,payer_type,post_time,post_user,session_id,pay_amount,account_code)".
@@ -220,12 +220,12 @@ if ($_POST['form_save']) {
 					", user_id = ?"     .
 					", closed = ?"      .
 					", reference = ?"   .
-					", check_date =  '?' , deposit_date = '?' "	.
+					", check_date = ? , deposit_date = ? "	.
 					",  pay_total = ?"    .
 					", payment_type = 'patient'" .
 					", description = ?"   .
 					", adjustment_code = ?" .
-					", post_to_date = '?' " .
+					", post_to_date = ? " .
 					", payment_method = ?",
 					array(0,$form_pid,$_SESSION['authUserID'],0,$form_source,$pmt_date,$pmt_date,$amount,$NameNew,$adjustment_code,$pmt_date,$form_method));
 
